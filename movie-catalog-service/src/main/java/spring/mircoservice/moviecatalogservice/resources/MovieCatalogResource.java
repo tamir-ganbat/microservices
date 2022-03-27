@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import spring.mircoservice.moviecatalogservice.models.CatalogItem;
 import spring.mircoservice.moviecatalogservice.models.Movie;
 import spring.mircoservice.moviecatalogservice.models.Rating;
+import spring.mircoservice.moviecatalogservice.models.UserRating;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,24 +32,11 @@ public class MovieCatalogResource {
     public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) {
 
         // list of rating
-        List<Rating> ratings = Arrays.asList(
-                new Rating("1234", 1),
-                new Rating("5678", 2)
-        );
+        UserRating userRating = restTemplate.getForObject("http://localhost:8083/ratingsdata/users/" + userId, UserRating.class);
 
-        return ratings.stream().map(rating -> {
+        return userRating.getUserRating().stream().map(rating -> {
             Movie movie = restTemplate.getForObject("http://localhost:8081/movies/" + rating.getMovieId(), Movie.class);
-
-            /*
-            Movie movie = webClientBuilder.build()
-                    .get()
-                    .uri("http://localhost:8081/movies/" + rating.getMovieId())
-                    .retrieve()
-                    .bodyToMono(Movie.class)
-                    .block();
-            */
-
-
+            // putting them all together
             return new CatalogItem(movie.getName(), "Test Movie", rating.getRating());
         }).collect(Collectors.toList());
         /*
@@ -57,4 +45,15 @@ public class MovieCatalogResource {
         );*/
 
     }
+
+    /*
+
+    webclient call webservice
+        Movie movie = webClientBuilder.build()
+                .get()
+                .uri("http://localhost:8081/movies/" + rating.getMovieId())
+                .retrieve()
+                .bodyToMono(Movie.class)
+                .block();
+        */
 }
